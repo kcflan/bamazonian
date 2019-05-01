@@ -3,11 +3,6 @@ const inquirer = require("inquirer");
 const dotenv = require('dotenv').config();
 let keys = require('./keys.js');
 
-let command = process.argv[2];
-// Get all elements in process.argv, starting from index 3 to the end
-// Join them into a string to get the space delimited address
-let args = process.argv.slice(3).join(' ');
-
 // create the connection information for the sql database
 var connection = mysql.createConnection(keys.connectDB);
 
@@ -19,22 +14,28 @@ connection.connect(function(err) {
 });
 // function which prompts the user for what action they should take
 let start = () => {
-  connection.query("SELECT * FROM products", function(err, results) {
+  connection.query("SELECT * FROM products WHERE prod_name IS NOT NULL", function(err, results) {
     if (err){ throw err;}
   
   inquirer
     .prompt([{
       
-        name: 'prodName',
-        type: 'rawlist',
-        choices: function() {
-          var choiceArray = [];
-          for (var i = 0; i < results.length; i++) {
-            choiceArray.push(`${results[i].prod_name} - (Price: \$${results[i].price})`);            
+        name: 'id',
+        type: 'list',
+        choices: () => {
+          let choiceArray = [];          
+          for (i of results) {
+            choiceArray.push(`${i.id} - ${i.prod_name} - (Price: \$${i.price}) - (Stock: ${i.quantity})`);            
           }
           return choiceArray;
         },
-        message: 'What is the Product you\'re looking to purchase?',       
+        message: 'What is the Product ID you\'re looking to purchase?',  
+        validate: function(value) {//greatBayBasic.js
+          if (isNaN(value) === false && parseInt(value) > 0) {
+            return true;
+          }
+          return false;
+        }     
       },
       {
         name: 'quantity',
@@ -48,11 +49,53 @@ let start = () => {
         }
       },
     ])
-    .then(answers => {
-      console.log(answers);
-            
+    .then(answer => {
+      // console.log(answer.id,answer.quantity);
+      
+      let id = parseInt(answer.id.split(' - ')[0]);
+      checkQuantity(id, answer.quantity);
+      
+
     });
   });
 }
+// check quantity in stock
+function checkQuantity(id, quantityDesired) {
+  connection.query('SELECT `prod_name`, `quantity`, `price` FROM products WHERE id = "' + id + '"', (err, res) => {
+    if (err) throw err;
+    let product = res[0].prod_name;
+    let stockQuantity = res[0].quantity;
+    let price = res[0].price;
+    // console.log(price);
+    
+    if (stockQuantity < quantityDesired) {
+      console.log(`\nBamazon does not currently have enough of ${product} in stock to fulfill you order.\n`);
+      start();
+    }
+    else {
+      let subTotal = price * quantityDesired;
+      console.log(`\n~~~~~~~~~~~~~~~BAMazon!~~~~~~~~~~~~~~~\nYour order summary:\nItem: ${product}\nQuantity: ${quantityDesired}\nYour order has been placed for \$${subTotal} The Bamazonians are processing it...\n\n`);
+      placeOrder(id, stockQuantity, quantityDesired);
+    }
+  });
+}
 
-  
+function placeOrder(id, stock, order) {
+  stock -= order;
+
+  // update quantity in stock
+  connection.query('UPDATE products SET ? WHERE ?',
+    [
+      {
+        quantity: stock
+      },
+      {
+        id: id
+      }
+    ],
+  (err) => {
+    if (err) throw err;
+    console.log('Please come visit us again!');    
+    connection.end();
+  });
+}
