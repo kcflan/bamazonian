@@ -2,6 +2,7 @@ const mysql = require('mysql');
 const inquirer = require('inquirer');
 const dotenv = require('dotenv').config();
 let keys = require('./keys.js');
+const Table = require('cli-table');
 
 // create the connection information for the sql database
 let connection = mysql.createConnection(keys.connectDB);
@@ -46,25 +47,32 @@ let mgrStart = () => {
         default:            
           connection.end();    
           process.exit();
-          break;
+          //break;
       }
     });
 };
 
-let viewAllProducts = () => {
+let viewAllProducts = () => {  
   connection.query(
     'SELECT * FROM products WHERE prod_name IS NOT NULL',
     (err, results) => {
       if (err) throw err;
 
-      console.log('\n~~~~~~~~~~~~~~~~~~~~~~\nAll available items in DB:\n');
+      console.log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~\nAll available items in DB:\n');
 
-      let productsArray = [];
+      // let productsArray = [];
+      let productsTable = new Table({
+        head: ['Product ID','Product Name','Price', 'Quantity'],
+        colWidths: [12,28,12,18]
+      }); 
       for (i of results) {
-        productsArray.push(`[ID: ${i.id}] - ${i.prod_name} - (Price: \$${i.price}) - (Stock: ${i.quantity})`);
+        // productsArray.push(`[ID: ${i.id}] - ${i.prod_name} - (Price: \$${i.price}) - (Stock: ${i.quantity})`);
+        productsTable.push([`${i.id}`, `${i.prod_name}`, `\$${i.price}`, `${i.quantity}`]);
       }
 
-      console.log(productsArray);
+      // console.log(productsArray);
+      console.log(productsTable.toString());
+    
       // console.table(productsArray);//thanks to bryce in t/th class for making me think about console.table,
       // I found npm  cli-table3 to implement if I have time, I didn't like console.table 
       mgrStart();//running the prompts again instead of closing the connection
@@ -73,19 +81,25 @@ let viewAllProducts = () => {
   );
 }
 let viewLowInventory = () => {
+  
     connection.query(
       'SELECT * FROM products WHERE quantity < 5',
       (err, results) => {
         if (err) throw err;
   
-        console.log('\n~~~~~~~~~~~~~~~~~~~~~~\nLow Inventory Items (Less Than 5 Items) in DB:\n');
-  
-        let productsArray = [];
+        console.log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nLow Inventory Items (Less Than 5 Items) in DB:\n');
+        let lowProductsTable = new Table({
+          head: ['Product ID','Product Name','Price', 'Quantity'],
+          colWidths: [12,28,12,18]
+        });         
         for (i of results) {
-          productsArray.push(`[ID: ${i.id}] - ${i.prod_name} - (Price: \$${i.price}) - (Stock: ${i.quantity})`);
+          // productsArray.push(`[ID: ${i.id}] - ${i.prod_name} - (Price: \$${i.price}) - (Stock: ${i.quantity})`);
+          lowProductsTable.push([`${i.id}`, `${i.prod_name}`, `\$${i.price}`, `${i.quantity}`]);
         }
   
-        console.log(productsArray);        
+        // console.log(productsArray);        
+        console.log(lowProductsTable.toString());
+        
         mgrStart();//running the prompts again instead of closing the connection
         // connection.end();
       }
@@ -166,7 +180,7 @@ let viewLowInventory = () => {
       {
         name: 'name',
         type: 'input',
-        message: 'Product:'
+        message: 'Product Name:'
       },
       {
         name: 'department',
