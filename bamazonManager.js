@@ -7,7 +7,7 @@ let keys = require('./keys.js');
 let connection = mysql.createConnection(keys.connectDB);
 
 // connect to the mysql server and sql database
-connection.connect(function(err) {
+connection.connect((err) => {
   if (err) throw err;
   // run the start function after the connection is made to prompt the user
   mgrStart();
@@ -24,11 +24,12 @@ let mgrStart = () => {
           'View Products for Sale',
           'View Low Inventory',
           'Add to Inventory',
-          'Add New Product'
+          'Add New Product',
+          'EXIT'
         ]
       }
     ])
-    .then(function(answer) {
+    .then(answer => {
       switch (answer.action) {
         case 'View Products for Sale':
           viewAllProducts();
@@ -40,9 +41,11 @@ let mgrStart = () => {
           addInventory();
           break;
         case 'Add New Product':
-          //   addProduct();
-          console.log('go');
-
+          addProduct();
+          break;
+        default:            
+          connection.end();    
+          process.exit();
           break;
       }
     });
@@ -58,12 +61,14 @@ let viewAllProducts = () => {
 
       let productsArray = [];
       for (i of results) {
-        productsArray.push(`${i.id} - ${i.prod_name} - (Price: \$${i.price}) - (Stock: ${i.quantity})`);
+        productsArray.push(`[ID: ${i.id}] - ${i.prod_name} - (Price: \$${i.price}) - (Stock: ${i.quantity})`);
       }
 
       console.log(productsArray);
-
-      connection.end();
+      // console.table(productsArray);//thanks to bryce in t/th class for making me think about console.table,
+      // I found npm  cli-table3 to implement if I have time, I didn't like console.table 
+      mgrStart();//running the prompts again instead of closing the connection
+      // connection.end(); 
     }
   );
 }
@@ -77,12 +82,12 @@ let viewLowInventory = () => {
   
         let productsArray = [];
         for (i of results) {
-          productsArray.push(`${i.id} - ${i.prod_name} - (Price: \$${i.price}) - (Stock: ${i.quantity})`);
+          productsArray.push(`[ID: ${i.id}] - ${i.prod_name} - (Price: \$${i.price}) - (Stock: ${i.quantity})`);
         }
   
-        console.log(productsArray);
-  
-        connection.end();
+        console.log(productsArray);        
+        mgrStart();//running the prompts again instead of closing the connection
+        // connection.end();
       }
     );
   }
@@ -90,7 +95,7 @@ let viewLowInventory = () => {
   let addInventory = () => {
     connection.query(
       'SELECT * FROM products',
-      function(err, results) {
+      (err, results) => {
         if (err) {
           throw err;
         }
@@ -103,16 +108,13 @@ let viewLowInventory = () => {
               choices: () => {
                 let choiceArray = [];
                 for (i of results) {
-                  choiceArray.push(
-                    `${i.id} - ${i.prod_name} - (Price: \$${i.price}) - (Stock: ${
-                      i.quantity
-                    })`
+                  choiceArray.push(`${i.id} - ${i.prod_name} - (Price: \$${i.price}) - (Stock: ${i.quantity})`
                   );
                 }
                 return choiceArray;
               },
               message: "What is the Product ID you're looking to add stock?",
-              validate: function(value) {
+              validate: (value) => {
                 //greatBayBasic.js
                 if (isNaN(value) === false && parseInt(value) > 0) {
                   return true;
@@ -124,7 +126,7 @@ let viewLowInventory = () => {
               name: 'quantity',
               message: 'How many units do you want to add?',
               default: '1',
-              validate: function(value) {
+              validate: (value) => {
                 if (isNaN(value) === false && parseInt(value) > 0) {
                   return true;
                 }
@@ -139,6 +141,7 @@ let viewLowInventory = () => {
       }
     );
   };
+
   let addQuantity = (id, quantity) => {    
     connection.query('UPDATE products SET ? WHERE ?',
     [
@@ -151,9 +154,64 @@ let viewLowInventory = () => {
     ],
     (err) => {
       if (err) throw err;      
-      console.log('Inventory has been added, Dwight!\n');  
-      connection.end();           
+      console.log('Inventory has been added, Manager Dwight!\n'); 
+      mgrStart();//running the prompts again instead of closing the connection
+        // connection.end();
     });
   }
 
+  let addProduct = () => {
+    inquirer
+    .prompt([
+      {
+        name: 'name',
+        type: 'input',
+        message: 'Product:'
+      },
+      {
+        name: 'department',
+        type: 'input',
+        message: 'Department:'
+      },
+      {
+        name: 'price',
+        type: 'input',
+        message: 'Price:',
+        validate: (val) => {
+          if (isNaN(val) === false) {
+            return true;
+          }
+          return false;
+        }
+      },
+      {
+        name: 'quantity',
+        type: 'input',
+        message: 'Quantity:',
+        validate: (val) => {
+          if (isNaN(val) === false) {
+            return true;
+          }
+          return false;
+        }
+      }
+    ])
+    .then((product) => {
+        
+      connection.query('INSERT INTO products SET ?',
+        {
+          prod_name: product.name,
+          dept_name: product.department,
+          price: product.price,
+          quantity: product.quantity
+        },
+        (err) => {
+          if (err) throw err;  
+          console.log(`The Bamazonians have procured and successfully added ${product.name} to the stock!\n`);  
+          mgrStart();//running the prompts again instead of closing the connection
+        // connection.end();  
+        }
+      );
+    });
+  }
 

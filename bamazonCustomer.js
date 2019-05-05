@@ -7,7 +7,7 @@ let keys = require('./keys.js');
 let connection = mysql.createConnection(keys.connectDB);
 
 // connect to the mysql server and sql database
-connection.connect(function(err) {
+connection.connect((err) => {
   if (err) throw err;
   // run the start function after the connection is made to prompt the user
   start();
@@ -16,7 +16,7 @@ connection.connect(function(err) {
 let start = () => {
   connection.query(
     'SELECT * FROM products WHERE prod_name IS NOT NULL',
-    function(err, results) {
+    (err, results) => {
       if (err) {
         throw err;
       }
@@ -38,7 +38,7 @@ let start = () => {
               return choiceArray;
             },
             message: "What is the Product ID you're looking to purchase?",
-            validate: function(value) {
+            validate: (value) => {
               //greatBayBasic.js
               if (isNaN(value) === false && parseInt(value) > 0) {
                 return true;
@@ -50,7 +50,7 @@ let start = () => {
             name: 'quantity',
             message: 'How many units do you want to purchase?',
             default: '1',
-            validate: function(value) {
+            validate: (value) => {
               if (isNaN(value) === false && parseInt(value) > 0) {
                 return true;
               }
