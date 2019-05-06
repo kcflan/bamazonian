@@ -56,5 +56,6 @@ The products table should have each of the following columns:
      
 ## Links to bamazonian video proof of working order:
 
-[bamazonian](https://bootcampkevin.github.io/bamazonian/index.html)
+[bamazonian Customer View](https://drive.google.com/file/d/1Z9su0fgcm_Cmy-IIt5EghkxAx3u5UJbG/view)
 
+[bamazonian Manager View](https://drive.google.com/file/d/1kJTw5DMKZCKYBV_d78gicKLEdZhTY9qm/view)
