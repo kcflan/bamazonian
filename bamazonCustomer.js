@@ -30,7 +30,7 @@ let start = () => {
               let choiceArray = [];
               for (i of results) {
                 choiceArray.push(
-                  `${i.id} - ${i.prod_name} - (Price: \$${i.price}) - (Stock: ${
+                  `${i.id} - ${i.prod_name} - (Price: \$${Number(i.price).toFixed(2)}) - (Stock: ${
                     i.quantity
                   })`
                 );
@@ -86,7 +86,7 @@ let checkQuantity = (id, quantityDesired) => {
         );
         start();
       } else {
-        let subTotal = price * quantityDesired;
+        let subTotal = Number(price * quantityDesired).toFixed(2);
         console.log(
           `\n~~~~~~~~~~~~~~~BAMazon!~~~~~~~~~~~~~~~\nYour order summary:\nItem: ${product}\nQuantity: ${quantityDesired}\nYour order has been placed for \$${subTotal} The Bamazonians are processing it...\n\n`
         );

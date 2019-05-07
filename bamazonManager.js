@@ -67,7 +67,7 @@ let viewAllProducts = () => {
       }); 
       for (i of results) {
         // productsArray.push(`[ID: ${i.id}] - ${i.prod_name} - (Price: \$${i.price}) - (Stock: ${i.quantity})`);
-        productsTable.push([`${i.id}`, `${i.prod_name}`, `\$${i.price}`, `${i.quantity}`]);
+        productsTable.push([`${i.id}`, `${i.prod_name}`, `\$${Number(i.price).toFixed(2)}`, `${i.quantity}`]);
       }
 
       // console.log(productsArray);
@@ -94,7 +94,7 @@ let viewLowInventory = () => {
         });         
         for (i of results) {
           // productsArray.push(`[ID: ${i.id}] - ${i.prod_name} - (Price: \$${i.price}) - (Stock: ${i.quantity})`);
-          lowProductsTable.push([`${i.id}`, `${i.prod_name}`, `\$${i.price}`, `${i.quantity}`]);
+          lowProductsTable.push([`${i.id}`, `${i.prod_name}`, `\$${Number(i.price).toFixed(2)}`, `${i.quantity}`]);
         }
   
         // console.log(productsArray);        
